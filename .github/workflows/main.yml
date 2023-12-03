@@ -1,0 +1,54 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+          cache-dependency-path: 'build.gradle.kts'
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Transfer JAR to EC2
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.REMOTE_IP }}
+          username: ${{ secrets.REMOTE_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: 'build/libs/demo-0.0.1-SNAPSHOT-plain.jar'
+          target: '/home/ubuntu/app/my-app.jar'
+
+      - name: SSH into EC2 and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.REMOTE_IP }}
+          username: ${{ secrets.REMOTE_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "> 현재 구동중인 애플리케이션 pid 확인"
+            CURRENT_PID=$(pgrep -f dailymemo)
+            echo "$CURRENT_PID"
+            if [ -z $CURRENT_PID ]; then
+                echo "> 현재 구동중인 애플리케이션이 없으므로 종료하지 않습니다."
+            else
+                echo "> kill -9 $CURRENT_PID"
+                kill -9 $CURRENT_PID
+                sleep 5
+            fi
+            echo "> 새 어플리케이션 배포"
+            # 여기에 새 어플리케이션 배포하는 명령어를 추가하세요
