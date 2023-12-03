@@ -52,6 +52,6 @@ jobs:
         
       - name: Execute remote commands
         run: |
-          ssh -v root@${{ secrets.REMOTER_IP }} "sudo fuser -k 8080/tcp || true"
-          ssh -v root@${{ secrets.REMOTE_IP }} "sudo nohup java -jar ~/app/*.jar  > ~/app/nohup.log 2>&1 &"
+          ssh -v ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTE_IP }} "sudo fuser -k 8080/tcp || true"
+          ssh -v ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTE_IP }} "sudo nohup java -jar ~/app/*.jar  > ~/app/nohup.log 2>&1 &"
      
