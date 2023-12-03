@@ -8,7 +8,6 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -27,31 +26,31 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
-      - name: Transfer JAR to EC2
-        uses: appleboy/ssh-action@v1.0.0
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
         with:
-          host: ${{ secrets.REMOTE_IP }}
-          username: ${{ secrets.REMOTE_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: './build/libs/*.jar'
-          target: '/home/ubuntu/app/my-app.jar'
-
-      - name: SSH into EC2 and deploy
-        uses: appleboy/ssh-action@v1.0.0
+          path: build/libs/*.jar
+          
+      - name: Download artifact
+        uses: actions/download-artifact@v3
         with:
-          host: ${{ secrets.REMOTE_IP }}
-          username: ${{ secrets.REMOTE_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            echo "> 현재 구동중인 애플리케이션 pid 확인"
-            CURRENT_PID=$(pgrep -f 'java')
-            echo "$CURRENT_PID"
-            if [ -z $CURRENT_PID ]; then
-                echo "> 현재 구동중인 애플리케이션이 없으므로 종료하지 않습니다."
-            else
-                echo "> kill -9 $CURRENT_PID"
-                kill -9 $CURRENT_PID
-                sleep 5
-            fi
-            echo "> 새 어플리케이션 배포"
-            nohup java -jar /home/ubuntu/app/my-app.jar > /dev/null 2>&1 &
+          name: cicdsample
+          
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          
+      - name: Add remote server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan ${{ secrets.REMOTE_IP }} >> ~/.ssh/known_hosts
+          
+      - name: SCP transfer
+        run: scp *.jar ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTE_IP }}:~/app
+        
+      - name: Execute remote commands
+        run: |
+          ssh -v ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTER_IP }} "sudo fuser -k 8080/tcp || true"
+          ssh -v ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTE_IP }} "sudo nohup java -jar ~/app/*.jar  > ~/app/nohup.log 2>&1 &"
+     
