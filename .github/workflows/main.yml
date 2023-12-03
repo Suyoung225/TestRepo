@@ -32,7 +32,7 @@ jobs:
           name: cicdsample
           path: build/libs/*.jar
           
-      - name: Download artifact
+      - name: Download artifact 
         uses: actions/download-artifact@v3
         with:
           name: cicdsample
