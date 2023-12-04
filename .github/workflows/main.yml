@@ -19,7 +19,7 @@ jobs:
           java-version: '17'
 
       - name: Run chmod to make gradlew executable
-        run: chmod +x ./gradlew clean build
+        run: chmod +x ./gradlew
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
