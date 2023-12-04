@@ -22,36 +22,43 @@ jobs:
           
       - name: Run chmod to make gradlew executable
         run: chmod +x ./gradlew
-          
-      - name: Build with Gradle
-        run: ./gradlew build
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
         with:
-          name: cicdsample
-          path: build/libs/*.jar
+          arguments: build
+          cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
+
           
-      - name: Download artifact 
-        uses: actions/download-artifact@v3
-        with:
-          name: cicdsample
+      # - name: Build with Gradle
+      #   run: ./gradlew build
+
+      # - name: Upload artifact
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: cicdsample
+      #     path: build/libs/*.jar
           
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      # - name: Download artifact 
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: cicdsample
           
-      - name: Add remote server to known hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan ${{ secrets.REMOTE_IP }} >> ~/.ssh/known_hosts
+      # - name: Setup SSH
+      #   uses: webfactory/ssh-agent@v0.5.4
+      #   with:
+      #     ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
           
-      - name: SCP transfer
-        run: scp *.jar ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTE_IP }}:~/app
+      # - name: Add remote server to known hosts
+      #   run: |
+      #     mkdir -p ~/.ssh
+      #     ssh-keyscan ${{ secrets.REMOTE_IP }} >> ~/.ssh/known_hosts
+          
+      # - name: SCP transfer
+      #   run: scp *.jar ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTE_IP }}:~/app
         
-      - name: Execute remote commands
-        run: |
-          ssh -v ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTE_IP }} "sudo fuser -k 8080/tcp || true"
-          ssh -v ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTE_IP }} "sudo nohup java -jar ~/app/*.jar  > ~/app/nohup.log 2>&1 &"
+      # - name: Execute remote commands
+      #   run: |
+      #     ssh -v ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTE_IP }} "sudo fuser -k 8080/tcp || true"
+      #     ssh -v ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTE_IP }} "sudo nohup java -jar ~/app/*.jar  > ~/app/nohup.log 2>&1 &"
      
