@@ -34,46 +34,42 @@ jobs:
       - name: Execute Gradle build
         run: ./gradlew clean build
 
-      - name: action-slack
-        uses: 8398a7/action-slack@v3
+      # - name: action-slack
+      #   uses: 8398a7/action-slack@v3
+      #   with:
+      #     status: ${{ job.status }}
+      #     author_name: Github Action Test # default: 8398a7@action-slack
+      #     fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
+      #   if: always()
+  
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
         with:
-          status: ${{ job.status }}
-          author_name: Github Action Test # default: 8398a7@action-slack
-          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
-        if: always()
-
+          name: cicdsample
+          path: build/libs/*.jar
           
-      # - name: Build with Gradle
-      #   run: ./gradlew build
-
-      # - name: Upload artifact
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: cicdsample
-      #     path: build/libs/*.jar
+      - name: Download artifact 
+        uses: actions/download-artifact@v3
+        with:
+          name: cicdsample
           
-      # - name: Download artifact 
-      #   uses: actions/download-artifact@v3
-      #   with:
-      #     name: cicdsample
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
           
-      # - name: Setup SSH
-      #   uses: webfactory/ssh-agent@v0.5.4
-      #   with:
-      #     ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Add remote server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan ${{ secrets.REMOTE_IP }} >> ~/.ssh/known_hosts
           
-      # - name: Add remote server to known hosts
-      #   run: |
-      #     mkdir -p ~/.ssh
-      #     ssh-keyscan ${{ secrets.REMOTE_IP }} >> ~/.ssh/known_hosts
-          
-      # - name: SCP transfer
-      #   run: scp *.jar ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTE_IP }}:~/app
+      - name: SCP transfer
+        run: scp *.jar ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTE_IP }}:~/app
         
-      # - name: Execute remote commands
-      #   run: |
-      #     ssh -v ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTE_IP }} "sudo fuser -k 8080/tcp || true"
-      #     ssh -v ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTE_IP }} "sudo nohup java -jar ~/app/*.jar  > ~/app/nohup.log 2>&1 &"
+      - name: Execute remote commands
+        run: |
+          ssh -v ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTE_IP }} "sudo fuser -k 8080/tcp || true"
+          ssh -v ${{ secrets.REMOTE_USERNAME }}@${{ secrets.REMOTE_IP }} "sudo nohup java -jar ~/app/*.jar  > ~/app/nohup.log 2>&1 &"
      
