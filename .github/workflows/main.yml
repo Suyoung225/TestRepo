@@ -47,13 +47,13 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: cicdsample
+          name: test-$(date +"%Y%m%d%H%M")
           path: build/libs/*.jar
           
       - name: Download artifact 
         uses: actions/download-artifact@v3
         with:
-          name: cicdsample
+          name: test-$(date +"%Y%m%d%H%M")
           
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.5.4
