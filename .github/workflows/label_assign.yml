@@ -3,7 +3,7 @@ on:
   pull_request:
     types: [opened, reopened]
     branches:
-      - development
+      - main
 jobs:
   add-labels-and-assignees:
     runs-on: ubuntu-latest
