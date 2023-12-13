@@ -17,25 +17,6 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              labels: ['bug', 'STG']
+              labels: ['🧹 STG']
             })
-      - name: Add reviewers
-        uses: actions/github-script@v3
-        with:
-          github-token: ${{secrets.ACCESS_TOKEN}}
-          script: |
-            let creator = context.payload.pull_request.user.login;
-            let reviewers;
 
-            if (creator === 'Suyoung225') {
-              reviewers = ['fin2b-syyun'];
-            } else if (creator === 'fin2b-syyun') {
-              reviewers = ['Suyoung225'];
-            }
-
-            github.pulls.requestReviewers({
-              pull_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              reviewers: reviewers
-            });
